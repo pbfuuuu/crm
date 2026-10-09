@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% from "_macros.html" import csrf, field %}
+{% block title %}Договор № {{ c.number }}{% endblock %}
+{% block content %}
+<h1>Редактирование договора № {{ c.number }}</h1>
+<div class="card form">
+<form method="post" novalidate>
+  {{ csrf() }}
+  {{ field('number', 'Номер договора', form.number, errors, 'text', True) }}
+  {{ field('end_date', 'Дата окончания', form.end_date, errors, 'date', True, '', 'Можно продлить или сократить срок. Дата начала и арендатор не меняются.') }}
+  <button class="btn" type="submit">Сохранить</button>
+  <a class="btn secondary" href="{{ url_for('contracts.detail', cid=c.id) }}">Отмена</a>
+</form></div>
+{% endblock %}

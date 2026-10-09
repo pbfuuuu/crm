@@ -1,0 +1,85 @@
+{% extends "base.html" %}{% from "_macros.html" import csrf, state_badge, pay_badge %}
+{% block title %}Договор № {{ c.number }}{% endblock %}
+{% block content %}
+<div class="head"><h1>Договор № {{ c.number }} {{ state_badge(state) }}</h1>
+  <div>
+    <a class="btn" href="{{ url_for('payments.new', contract_id=c.id, next=request.path) }}">+ Внести оплату</a>
+    {% if c.is_active %}<a class="btn secondary" href="{{ url_for('contracts.edit', cid=c.id) }}">Редактировать</a>{% endif %}
+    {% if g.user.role == 'admin' %}
+    <form class="inline" method="post" action="{{ url_for('contracts.delete', cid=c.id) }}" data-confirm="Удалить договор № {{ c.number }}?">
+      {{ csrf() }}<button class="btn danger" type="submit">Удалить</button></form>{% endif %}
+  </div>
+</div>
+
+<div class="grid g4">
+  <div class="card stat"><div class="label">Текущая ставка</div><div class="value">{{ cur_rent|money }}</div><div class="sub">в месяц</div></div>
+  <div class="card stat"><div class="label">Начислено</div><div class="value">{{ summary.accrued|money }}</div><div class="sub">по текущий месяц</div></div>
+  <div class="card stat"><div class="label">Оплачено</div><div class="value">{{ summary.paid|money }}</div></div>
+  <div class="card stat"><div class="label">{{ 'Переплата' if summary.overpaid else 'Долг' }}</div>
+    <div class="value {{ 'debt' if summary.debt > 0 }}">{{ (summary.overpaid or summary.debt)|money }}</div></div>
+</div>
+
+<div class="card"><dl class="kv">
+  <dt>Клиент</dt><dd><a href="{{ url_for('tenants.detail', tid=c.tenant_id) }}">{{ c.tenant_name }}</a></dd>
+  <dt>Помещение</dt><dd>{{ c.premises_number }}, {{ c.floor }} этаж, {{ c.area|area }}</dd>
+  <dt>Срок действия</dt><dd>{{ c.start_date|date_ru }} — {{ c.end_date|date_ru }}</dd>
+  <dt>Базовая ставка</dt><dd>{{ c.monthly_rent|money }}</dd>
+</dl></div>
+
+<div class="grid g2">
+<div>
+  <h2>Помесячные начисления</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Месяц</th><th class="num">Начислено</th><th class="num">Оплачено</th><th>Статус</th><th></th></tr></thead>
+    <tbody>{% for m in summary.months|reverse %}
+      <tr><td>{{ m.period|month_ru }}</td><td class="num">{{ m.rent|money }}</td><td class="num">{{ m.paid|money }}</td>
+        <td>{{ pay_badge(m.status) }}</td>
+        <td class="right">{% if m.left > 0 %}<a class="btn small" href="{{ url_for('payments.new', contract_id=c.id, period=m.period, next=request.path) }}">Внести</a>{% endif %}</td></tr>
+    {% else %}<tr><td colspan="5" class="empty">Договор ещё не начался</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div>
+<div>
+  <h2>История арендной платы</h2>
+  <div class="tablewrap mb12"><table>
+    <thead><tr><th>С месяца</th><th class="num">Ставка</th><th></th></tr></thead>
+    <tbody>
+      <tr><td>{{ c.start_date[:7]|month_ru }} <span class="muted">(по договору)</span></td><td class="num">{{ c.monthly_rent|money }}</td><td></td></tr>
+      {% for r in changes %}<tr><td>{{ r.valid_from|month_ru }}</td><td class="num">{{ r.new_rent|money }}</td>
+        <td class="right">{% if g.user.role == 'admin' %}<form class="inline" method="post" action="{{ url_for('contracts.delete_rent_change', cid=c.id, rid=r.id) }}" data-confirm="Удалить это изменение ставки?">{{ csrf() }}<button class="btn small danger" type="submit">×</button></form>{% endif %}</td></tr>{% endfor %}
+    </tbody></table></div>
+  {% if c.is_active %}
+  <div class="card">
+    <strong>Изменить арендную плату</strong>
+    <form method="post" action="{{ url_for('contracts.add_rent_change', cid=c.id) }}" class="mt10">
+      {{ csrf() }}
+      <div class="row2">
+        <div class="field"><label for="new_rent">Новая ставка, ₽</label><input id="new_rent" name="new_rent" type="text" inputmode="decimal" required></div>
+        <div class="field"><label for="valid_from">С месяца</label><input id="valid_from" name="valid_from" type="month" placeholder="ГГГГ-ММ" required></div>
+      </div>
+      <div class="hint mb10">Прошлые начисления не пересчитываются — новая ставка действует только с выбранного месяца.</div>
+      <button class="btn" type="submit">Применить</button>
+    </form>
+  </div>
+  <div class="card">
+    <strong>Расторгнуть договор</strong>
+    <form method="post" action="{{ url_for('contracts.terminate', cid=c.id) }}" class="mt10" data-confirm="Закрыть договор? Помещение станет свободным.">
+      {{ csrf() }}
+      <div class="field"><label for="end_date">Дата расторжения</label>
+        <input id="end_date" name="end_date" type="date" value="{{ today if c.start_date <= today <= c.end_date else c.end_date }}" required></div>
+      <button class="btn danger" type="submit">Расторгнуть</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+</div>
+
+<h2>Платежи</h2>
+<div class="tablewrap"><table>
+  <thead><tr><th>Дата оплаты</th><th>За месяц</th><th class="num">Сумма</th><th>Примечание</th><th>Внёс запись</th><th></th></tr></thead>
+  <tbody>{% for p in payments %}
+    <tr><td class="nowrap">{{ p.paid_at|date_ru }}</td><td>{{ p.period|month_ru }}</td><td class="num">{{ p.amount|money }}</td>
+      <td>{{ p.note or '' }}</td><td class="muted">{{ p.author or '—' }}</td>
+      <td class="right">{% if g.user.role == 'admin' %}<form class="inline" method="post" action="{{ url_for('payments.delete', pid=p.id) }}" data-confirm="Удалить платёж?">{{ csrf() }}<button class="btn small danger" type="submit">Удалить</button></form>{% endif %}</td></tr>
+  {% else %}<tr><td colspan="6" class="empty">Платежей ещё не было</td></tr>{% endfor %}</tbody>
+</table></div>
+{% endblock %}

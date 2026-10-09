@@ -1,0 +1,24 @@
+{% extends "base.html" %}{% from "_macros.html" import csrf, field %}
+{% block title %}Внесение оплаты{% endblock %}
+{% block content %}
+<h1>Внесение оплаты</h1>
+<div class="card form">
+<form method="post" novalidate>
+  {{ csrf() }}
+  <input type="hidden" name="next" value="{{ form.next }}">
+  <div class="field{% if errors.get('contract_id') %} has-error{% endif %}">
+    <label for="contract_id">Договор <span class="req">*</span></label>
+    <select id="contract_id" name="contract_id"><option value="">— выберите —</option>
+      {% for c in contracts %}<option value="{{ c.id }}" {{ 'selected' if form.contract_id|string == c.id|string }}>№ {{ c.number }} · {{ c.tenant_name }} · пом. {{ c.premises_number }}{% if c.state == 'closed' %} (закрыт){% endif %}</option>{% endfor %}</select>
+    {% if errors.get('contract_id') %}<div class="err">{{ errors['contract_id'] }}</div>{% endif %}
+  </div>
+  <div class="row2">
+    {{ field('period', 'За какой месяц', form.period, errors, 'month', True, 'placeholder="ГГГГ-ММ"') }}
+    {{ field('amount', 'Сумма, ₽', form.amount, errors, 'text', True, 'inputmode="decimal"', 'Для неполной оплаты введите фактическую сумму.') }}
+  </div>
+  {{ field('paid_at', 'Дата оплаты', form.paid_at, errors, 'date', True) }}
+  {{ field('note', 'Примечание', form.note, errors, 'text', False, '', 'Например: № платёжного поручения.') }}
+  <button class="btn" type="submit">Записать оплату</button>
+  <a class="btn secondary" href="{{ form.next or url_for('payments.month_view') }}">Отмена</a>
+</form></div>
+{% endblock %}

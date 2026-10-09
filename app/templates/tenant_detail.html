@@ -1,0 +1,34 @@
+{% extends "base.html" %}{% from "_macros.html" import csrf, state_badge %}
+{% block title %}{{ t.name }}{% endblock %}
+{% block content %}
+<div class="head"><h1>{{ t.name }}</h1>
+  <div>
+    <a class="btn" href="{{ url_for('contracts.new', tenant_id=t.id) }}">+ Новый договор</a>
+    <a class="btn secondary" href="{{ url_for('tenants.edit', tid=t.id) }}">Редактировать</a>
+    {% if g.user.role == 'admin' %}
+    <form class="inline" method="post" action="{{ url_for('tenants.delete', tid=t.id) }}" data-confirm="Удалить клиента «{{ t.name }}»?">
+      {{ csrf() }}<button class="btn danger" type="submit">Удалить</button></form>
+    {% endif %}
+  </div>
+</div>
+<div class="card"><dl class="kv">
+  <dt>ИНН</dt><dd>{{ inn }}</dd>
+  <dt>Контактное лицо</dt><dd>{{ t.contact_person or '—' }}</dd>
+  <dt>Телефон</dt><dd>{{ t.phone or '—' }}</dd>
+  <dt>Email</dt><dd>{{ t.email or '—' }}</dd>
+  <dt>Примечание</dt><dd>{{ t.note or '—' }}</dd>
+  <dt>Общий долг</dt><dd>{% if debt > 0 %}<span class="debt">{{ debt|money }}</span>{% else %}нет{% endif %}</dd>
+</dl></div>
+<h2>Договоры</h2>
+<div class="tablewrap"><table>
+  <thead><tr><th>Договор</th><th>Помещение</th><th>Срок</th><th class="num">Ставка</th><th class="num">Долг</th><th>Статус</th></tr></thead>
+  <tbody>{% for c in contracts %}
+    <tr><td><a href="{{ url_for('contracts.detail', cid=c.id) }}">№ {{ c.number }}</a></td>
+      <td>{{ c.premises_number }}, {{ c.floor }} эт.</td>
+      <td class="nowrap">{{ c.start_date|date_ru }} — {{ c.end_date|date_ru }}</td>
+      <td class="num">{{ c.current_rent|money }}</td>
+      <td class="num">{% if c.summary.debt > 0 %}<span class="debt">{{ c.summary.debt|money }}</span>{% else %}—{% endif %}</td>
+      <td>{{ state_badge(c.state) }}</td></tr>
+  {% else %}<tr><td colspan="6" class="empty">Договоров пока нет</td></tr>{% endfor %}</tbody>
+</table></div>
+{% endblock %}

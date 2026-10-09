@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Главная{% endblock %}
+{% block content %}
+<h1>Главная</h1>
+<div class="grid g4">
+  <div class="card stat">
+    <div class="label">Заполняемость</div>
+    <div class="value">{{ stats.occupancy_area }}%</div>
+    <meter min="0" max="100" value="{{ stats.occupancy_area }}" low="40" high="70" optimum="100"></meter>
+    <div class="sub">занято {{ stats.premises_rented }} из {{ stats.premises_total }} помещений{% if stats.premises_repair %}, на ремонте {{ stats.premises_repair }}{% endif %}</div>
+  </div>
+  <div class="card stat">
+    <div class="label">Оплаты: {{ month|month_ru }}</div>
+    <div class="value">{{ stats.month_received|money }}</div>
+    <progress max="{{ stats.month_expected or 1 }}" value="{{ stats.month_received }}"></progress>
+    <div class="sub">начислено {{ stats.month_expected|money }}</div>
+  </div>
+  <div class="card stat">
+    <div class="label">Должники</div>
+    <div class="value">{{ stats.debtors }}</div>
+    <div class="sub">общий долг <span class="debt">{{ stats.debt_total|money }}</span></div>
+    <div class="sub"><a href="{{ url_for('reports.debtors') }}">Открыть отчёт</a></div>
+  </div>
+  <div class="card stat">
+    <div class="label">Не оплачено за месяц</div>
+    <div class="value">{{ stats.month_left|money }}</div>
+    <div class="sub"><a href="{{ url_for('payments.month_view', filter='unpaid') }}">Кто не оплатил</a></div>
+  </div>
+</div>
+
+<div class="grid g2">
+  <div class="card">
+    <h2>Крупнейшие долги</h2>
+    {% if top %}
+    <table><tbody>
+      {% for d in top %}<tr><td><a href="{{ url_for('tenants.detail', tid=d.tenant_id) }}">{{ d.name }}</a></td>
+        <td class="num debt">{{ d.debt|money }}</td></tr>{% endfor %}
+    </tbody></table>
+    {% else %}<div class="empty">Задолженности нет</div>{% endif %}
+  </div>
+  <div class="card">
+    <h2>Договоры, скоро истекающие</h2>
+    {% if ending %}
+    <table><tbody>
+      {% for c in ending %}<tr><td><a href="{{ url_for('contracts.detail', cid=c.id) }}">№ {{ c.number }}</a>
+        <div class="muted">{{ c.tenant_name }}, пом. {{ c.premises_number }}</div></td>
+        <td class="num">до {{ c.end_date|date_ru }}</td></tr>{% endfor %}
+    </tbody></table>
+    {% else %}<div class="empty">Ближайшие 60 дней ничего не истекает</div>{% endif %}
+  </div>
+</div>
+
+{% if expired %}
+<div class="card">
+  <h2>Срок истёк, договор не закрыт</h2>
+  <table><tbody>
+    {% for c in expired %}<tr><td><a href="{{ url_for('contracts.detail', cid=c.id) }}">№ {{ c.number }}</a> — {{ c.tenant_name }}, пом. {{ c.premises_number }}</td>
+      <td class="num">истёк {{ c.end_date|date_ru }}</td></tr>{% endfor %}
+  </tbody></table>
+  <div class="hint">Закройте договор (расторжение), чтобы помещение стало свободным, либо продлите срок.</div>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}{% from "_macros.html" import csrf, premises_badge %}
+{% block title %}Помещения{% endblock %}
+{% block content %}
+<div class="head"><h1>Помещения</h1><a class="btn" href="{{ url_for('premises.new') }}">+ Добавить помещение</a></div>
+<form method="get" class="toolbar">
+  <input type="text" name="q" value="{{ q }}" placeholder="Номер или арендатор">
+  <select name="status"><option value="">Любой статус</option>
+    {% for k, v in statuses.items() %}<option value="{{ k }}" {{ 'selected' if status == k }}>{{ v }}</option>{% endfor %}</select>
+  <select name="floor"><option value="">Все этажи</option>
+    {% for f in floors %}<option value="{{ f }}" {{ 'selected' if floor == f|string }}>{{ f }} этаж</option>{% endfor %}</select>
+  <button class="btn secondary" type="submit">Применить</button>
+  {% if q or status or floor %}<a href="{{ url_for('premises.index') }}">Сбросить</a>{% endif %}
+</form>
+<div class="tablewrap"><table>
+  <thead><tr><th>Номер</th><th>Этаж</th><th class="num">Площадь</th><th>Статус</th><th>Арендатор</th><th>Договор до</th><th></th></tr></thead>
+  <tbody>{% for r in rows %}
+    <tr><td><strong>{{ r.p.number }}</strong></td><td>{{ r.p.floor }}</td><td class="num">{{ r.p.area|area }}</td>
+      <td>{{ premises_badge(r.p.status) }}</td>
+      <td>{{ r.contract.tenant_name if r.contract else '—' }}</td>
+      <td class="nowrap">{{ r.contract.end_date|date_ru if r.contract else '—' }}</td>
+      <td class="right nowrap">
+        {% if r.p.status == 'free' %}<a class="btn small" href="{{ url_for('contracts.new', premises_id=r.p.id) }}">Сдать</a>{% endif %}
+        <a class="btn small secondary" href="{{ url_for('premises.edit', pid=r.p.id) }}">Изменить</a>
+        {% if g.user.role == 'admin' %}
+        <form class="inline" method="post" action="{{ url_for('premises.delete', pid=r.p.id) }}" data-confirm="Удалить помещение {{ r.p.number }}?">
+          {{ csrf() }}<button class="btn small danger" type="submit">Удалить</button></form>{% endif %}
+      </td></tr>
+  {% else %}<tr><td colspan="7" class="empty">Помещения не найдены</td></tr>{% endfor %}</tbody>
+  {% if rows %}<tfoot><tr><td colspan="2">Итого: {{ rows|length }}</td><td class="num">{{ total_area|area }}</td><td colspan="4"></td></tr></tfoot>{% endif %}
+</table></div>
+{% endblock %}

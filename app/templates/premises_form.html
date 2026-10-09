@@ -1,0 +1,30 @@
+{% extends "base.html" %}{% from "_macros.html" import csrf, field, textarea %}
+{% block title %}{{ 'Редактирование помещения' if premises else 'Новое помещение' }}{% endblock %}
+{% block content %}
+<h1>{{ 'Редактирование помещения' if premises else 'Новое помещение' }}</h1>
+<div class="card form">
+<form method="post" novalidate>
+  {{ csrf() }}
+  <div class="row2">
+    {{ field('number', 'Номер помещения', form.get('number'), errors, 'text', True) }}
+    {{ field('floor', 'Этаж', form.get('floor'), errors, 'number', True) }}
+  </div>
+  {{ field('area', 'Площадь, м²', form.get('area'), errors, 'text', True, 'inputmode="decimal"') }}
+  <div class="field{% if errors.get('status') %} has-error{% endif %}">
+    <label for="status">Статус</label>
+    {% if locked %}
+      <input type="text" value="Занято (есть действующий договор)" disabled>
+      <div class="hint">Статус изменится автоматически после расторжения договора.</div>
+    {% else %}
+      <select id="status" name="status">
+        <option value="free" {{ 'selected' if form.get('status') == 'free' }}>Свободно</option>
+        <option value="repair" {{ 'selected' if form.get('status') == 'repair' }}>На ремонте</option>
+      </select>
+    {% endif %}
+    {% if errors.get('status') %}<div class="err">{{ errors['status'] }}</div>{% endif %}
+  </div>
+  {{ textarea('note', 'Примечание', form.get('note'), errors) }}
+  <button class="btn" type="submit">Сохранить</button>
+  <a class="btn secondary" href="{{ url_for('premises.index') }}">Отмена</a>
+</form></div>
+{% endblock %}

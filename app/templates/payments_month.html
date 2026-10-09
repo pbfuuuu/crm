@@ -1,0 +1,29 @@
+{% extends "base.html" %}{% from "_macros.html" import pay_badge %}
+{% block title %}Оплаты за месяц{% endblock %}
+{% block content %}
+<div class="head"><h1>Оплаты: {{ month|month_ru }}</h1>
+  <a class="btn secondary" href="{{ url_for('payments.export', month=month) }}">Скачать Excel</a></div>
+<div class="toolbar">
+  <a class="btn secondary" href="{{ url_for('payments.month_view', month=prev_month, filter='unpaid' if only_unpaid) }}">← {{ prev_month|month_ru }}</a>
+  <a class="btn secondary" href="{{ url_for('payments.month_view', month=next_month, filter='unpaid' if only_unpaid) }}">{{ next_month|month_ru }} →</a>
+  <form method="get" class="toolbar nomargin">
+    <input type="month" name="month" value="{{ month }}" placeholder="ГГГГ-ММ">
+    <label><input type="checkbox" name="filter" value="unpaid" {{ 'checked' if only_unpaid }}> только должники</label>
+    <button class="btn secondary" type="submit">Показать</button>
+  </form>
+  {% if month != cur_month %}<a href="{{ url_for('payments.month_view') }}">Текущий месяц</a>{% endif %}
+</div>
+<div class="tablewrap"><table>
+  <thead><tr><th>Клиент</th><th>Помещение</th><th>Договор</th><th class="num">Начислено</th><th class="num">Оплачено</th><th class="num">Остаток</th><th>Статус</th><th></th></tr></thead>
+  <tbody>{% for r in rows %}
+    <tr><td><a href="{{ url_for('tenants.detail', tid=r.tenant_id) }}">{{ r.tenant_name }}</a></td>
+      <td>{{ r.premises_number }}</td>
+      <td><a href="{{ url_for('contracts.detail', cid=r.contract_id) }}">№ {{ r.number }}</a></td>
+      <td class="num">{{ r.rent|money }}</td><td class="num">{{ r.paid|money }}</td>
+      <td class="num">{% if r.left > 0 %}<span class="debt">{{ r.left|money }}</span>{% else %}—{% endif %}</td>
+      <td>{{ pay_badge(r.status) }}</td>
+      <td class="right">{% if r.status != 'future' %}<a class="btn small" href="{{ url_for('payments.new', contract_id=r.contract_id, period=month, next=request.full_path.rstrip('?')) }}">Внести оплату</a>{% endif %}</td></tr>
+  {% else %}<tr><td colspan="8" class="empty">{{ 'Все оплатили за этот месяц 🎉' if only_unpaid else 'Нет договоров, действующих в этом месяце' }}</td></tr>{% endfor %}</tbody>
+  {% if rows %}<tfoot><tr><td colspan="3">Итого за месяц</td><td class="num">{{ totals.rent|money }}</td><td class="num">{{ totals.paid|money }}</td><td class="num">{{ totals.left|money }}</td><td colspan="2"></td></tr></tfoot>{% endif %}
+</table></div>
+{% endblock %}

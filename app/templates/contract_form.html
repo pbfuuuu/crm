@@ -1,0 +1,35 @@
+{% extends "base.html" %}{% from "_macros.html" import csrf, field %}
+{% block title %}Новый договор{% endblock %}
+{% block content %}
+<h1>Новый договор аренды</h1>
+<div class="card form wide">
+{% if not free %}<div class="flash info">Свободных помещений нет. Освободите помещение (расторгните договор) или добавьте новое.</div>{% endif %}
+<form method="post" novalidate>
+  {{ csrf() }}
+  <div class="row2">
+    <div class="field{% if errors.get('tenant_id') %} has-error{% endif %}">
+      <label for="tenant_id">Клиент <span class="req">*</span></label>
+      <select id="tenant_id" name="tenant_id"><option value="">— выберите —</option>
+        {% for t in tenants %}<option value="{{ t.id }}" {{ 'selected' if form.get('tenant_id')|string == t.id|string }}>{{ t.name }}</option>{% endfor %}</select>
+      {% if errors.get('tenant_id') %}<div class="err">{{ errors['tenant_id'] }}</div>{% endif %}
+    </div>
+    <div class="field{% if errors.get('premises_id') %} has-error{% endif %}">
+      <label for="premises_id">Помещение (только свободные) <span class="req">*</span></label>
+      <select id="premises_id" name="premises_id"><option value="">— выберите —</option>
+        {% for p in free %}<option value="{{ p.id }}" {{ 'selected' if form.get('premises_id')|string == p.id|string }}>{{ p.number }} · {{ p.floor }} эт. · {{ p.area|area }}</option>{% endfor %}</select>
+      {% if errors.get('premises_id') %}<div class="err">{{ errors['premises_id'] }}</div>{% endif %}
+    </div>
+  </div>
+  <div class="row2">
+    {{ field('number', 'Номер договора', form.get('number'), errors, 'text', True) }}
+    {{ field('monthly_rent', 'Арендная плата в месяц, ₽', form.get('monthly_rent'), errors, 'text', True, 'inputmode="decimal"') }}
+  </div>
+  <div class="row2">
+    {{ field('start_date', 'Дата начала', form.get('start_date'), errors, 'date', True) }}
+    {{ field('end_date', 'Дата окончания', form.get('end_date'), errors, 'date', True) }}
+  </div>
+  <div class="hint mb14">Плата начисляется за каждый календарный месяц срока договора целиком.</div>
+  <button class="btn" type="submit">Оформить договор</button>
+  <a class="btn secondary" href="{{ url_for('contracts.index') }}">Отмена</a>
+</form></div>
+{% endblock %}

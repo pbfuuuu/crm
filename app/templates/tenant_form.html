@@ -1,0 +1,19 @@
+{% extends "base.html" %}{% from "_macros.html" import csrf, field, textarea %}
+{% block title %}{{ 'Редактирование клиента' if tenant else 'Новый клиент' }}{% endblock %}
+{% block content %}
+<h1>{{ 'Редактирование клиента' if tenant else 'Новый клиент' }}</h1>
+<div class="card form">
+<form method="post" novalidate>
+  {{ csrf() }}
+  {{ field('name', 'Название организации / ИП', form.get('name'), errors, 'text', True) }}
+  {{ field('inn', 'ИНН', form.get('inn'), errors, 'text', True, 'inputmode="numeric" maxlength="12"', '10 цифр для организации, 12 — для ИП. В базе хранится в зашифрованном виде.') }}
+  <div class="row2">
+    {{ field('contact_person', 'Контактное лицо', form.get('contact_person'), errors) }}
+    {{ field('phone', 'Телефон', form.get('phone'), errors) }}
+  </div>
+  {{ field('email', 'Email', form.get('email'), errors, 'email') }}
+  {{ textarea('note', 'Примечание', form.get('note'), errors) }}
+  <button class="btn" type="submit">Сохранить</button>
+  <a class="btn secondary" href="{{ url_for('tenants.detail', tid=tenant.id) if tenant else url_for('tenants.index') }}">Отмена</a>
+</form></div>
+{% endblock %}

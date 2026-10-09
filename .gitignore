@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+instance/*
+!instance/.gitkeep
+backups/
+venv/
+.venv/
+.idea/

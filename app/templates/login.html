@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% from "_macros.html" import csrf %}
+{% block title %}Вход{% endblock %}
+{% block content %}
+<div class="login-box card">
+  <h1>Вход в систему</h1>
+  {% if error %}<div class="alert err-box">{{ error }}</div>{% endif %}
+  <form method="post" autocomplete="off">
+    {{ csrf() }}
+    <div class="field"><label for="username">Логин</label>
+      <input id="username" name="username" type="text" autofocus required></div>
+    <div class="field"><label for="password">Пароль</label>
+      <input id="password" name="password" type="password" required></div>
+    <button class="btn" type="submit">Войти</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Клиенты{% endblock %}
+{% block content %}
+<div class="head"><h1>Клиенты</h1><a class="btn" href="{{ url_for('tenants.new') }}">+ Добавить клиента</a></div>
+<form method="get" class="toolbar">
+  <input type="text" name="q" value="{{ q }}" placeholder="Поиск по названию, контакту, телефону">
+  <label><input type="checkbox" name="debt" value="1" {{ 'checked' if only_debt }}> только с долгом</label>
+  <button class="btn secondary" type="submit">Найти</button>
+  {% if q or only_debt %}<a href="{{ url_for('tenants.index') }}">Сбросить</a>{% endif %}
+</form>
+<div class="tablewrap"><table>
+  <thead><tr><th>Название</th><th>Контактное лицо</th><th>Телефон</th><th class="num">Действ. договоров</th><th class="num">Долг</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr><td><a href="{{ url_for('tenants.detail', tid=r.t.id) }}">{{ r.t.name }}</a></td>
+      <td>{{ r.t.contact_person or '—' }}</td><td class="nowrap">{{ r.t.phone or '—' }}</td>
+      <td class="num">{{ r.active }}</td>
+      <td class="num">{% if r.debt > 0 %}<span class="debt">{{ r.debt|money }}</span>{% else %}—{% endif %}</td></tr>
+  {% else %}<tr><td colspan="5" class="empty">Клиенты не найдены</td></tr>{% endfor %}
+  </tbody></table></div>
+{% endblock %}

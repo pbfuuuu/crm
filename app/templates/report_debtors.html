@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Должники{% endblock %}
+{% block content %}
+<div class="head"><h1>Должники</h1><a class="btn secondary" href="{{ url_for('reports.debtors', format='xlsx') }}">Скачать Excel</a></div>
+<div class="tablewrap"><table>
+  <thead><tr><th>Клиент</th><th>Договор</th><th>Помещение</th><th class="num">Ставка</th><th class="num">Начислено</th><th class="num">Оплачено</th><th class="num">Долг</th><th class="num">Мес. с долгом</th></tr></thead>
+  <tbody>{% for r in rows %}
+    <tr><td><a href="{{ url_for('tenants.detail', tid=r.tenant_id) }}">{{ r.tenant }}</a></td>
+      <td><a href="{{ url_for('contracts.detail', cid=r.contract_id) }}">№ {{ r.number }}</a></td><td>{{ r.premises }}</td>
+      <td class="num">{{ r.rent|money }}</td><td class="num">{{ r.accrued|money }}</td><td class="num">{{ r.paid|money }}</td>
+      <td class="num debt">{{ r.debt|money }}</td><td class="num">{{ r.late }}</td></tr>
+  {% else %}<tr><td colspan="8" class="empty">Должников нет</td></tr>{% endfor %}</tbody>
+  {% if rows %}<tfoot><tr><td colspan="6">Итого</td><td class="num debt">{{ total|money }}</td><td></td></tr></tfoot>{% endif %}
+</table></div>
+{% endblock %}

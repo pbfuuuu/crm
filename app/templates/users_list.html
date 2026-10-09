@@ -1,0 +1,20 @@
+{% extends "base.html" %}{% from "_macros.html" import csrf %}
+{% block title %}Пользователи{% endblock %}
+{% block content %}
+<div class="head"><h1>Пользователи</h1><a class="btn" href="{{ url_for('users.new') }}">+ Добавить пользователя</a></div>
+<div class="tablewrap"><table>
+  <thead><tr><th>Логин</th><th>ФИО</th><th>Роль</th><th>Состояние</th><th></th></tr></thead>
+  <tbody>{% for u in users %}
+    <tr><td><strong>{{ u.username }}</strong></td><td>{{ u.full_name }}</td><td>{{ roles[u.role] }}</td>
+      <td>{% if not u.is_active %}<span class="badge b-grey">Заблокирован</span>
+          {% elif u.must_change_password %}<span class="badge b-warn">Ждёт смены пароля</span>
+          {% else %}<span class="badge b-ok">Активен</span>{% endif %}</td>
+      <td class="right nowrap">
+        <form class="inline" method="post" action="{{ url_for('users.reset', uid=u.id) }}" data-confirm="Сбросить пароль пользователя {{ u.username }}? Будет выдан новый временный пароль.">{{ csrf() }}<button class="btn small secondary" type="submit">Сбросить пароль</button></form>
+        {% if u.id != g.user.id %}
+        <form class="inline" method="post" action="{{ url_for('users.toggle', uid=u.id) }}">{{ csrf() }}<button class="btn small {{ 'secondary' if not u.is_active else 'danger' }}" type="submit">{{ 'Разблокировать' if not u.is_active else 'Заблокировать' }}</button></form>
+        {% endif %}
+      </td></tr>
+  {% endfor %}</tbody>
+</table></div>
+{% endblock %}

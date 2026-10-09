@@ -1,0 +1,24 @@
+{% extends "base.html" %}{% from "_macros.html" import state_badge %}
+{% block title %}Договоры{% endblock %}
+{% block content %}
+<div class="head"><h1>Договоры аренды</h1><a class="btn" href="{{ url_for('contracts.new') }}">+ Новый договор</a></div>
+<form method="get" class="toolbar">
+  <input type="text" name="q" value="{{ q }}" placeholder="Номер, клиент или помещение">
+  <select name="state"><option value="">Все договоры</option>
+    {% for k, v in filters.items() %}<option value="{{ k }}" {{ 'selected' if flt == k }}>{{ v }}</option>{% endfor %}</select>
+  <button class="btn secondary" type="submit">Применить</button>
+  {% if q or flt %}<a href="{{ url_for('contracts.index') }}">Сбросить</a>{% endif %}
+</form>
+<div class="tablewrap"><table>
+  <thead><tr><th>Договор</th><th>Клиент</th><th>Помещение</th><th>Срок</th><th class="num">Ставка</th><th class="num">Долг</th><th>Статус</th></tr></thead>
+  <tbody>{% for c in rows %}
+    <tr><td><a href="{{ url_for('contracts.detail', cid=c.id) }}">№ {{ c.number }}</a></td>
+      <td><a href="{{ url_for('tenants.detail', tid=c.tenant_id) }}">{{ c.tenant_name }}</a></td>
+      <td>{{ c.premises_number }}</td>
+      <td class="nowrap">{{ c.start_date|date_ru }} — {{ c.end_date|date_ru }}</td>
+      <td class="num">{{ c.current_rent|money }}</td>
+      <td class="num">{% if c.summary.debt > 0 %}<span class="debt">{{ c.summary.debt|money }}</span>{% else %}—{% endif %}</td>
+      <td>{{ state_badge(c.state) }}</td></tr>
+  {% else %}<tr><td colspan="7" class="empty">Договоры не найдены</td></tr>{% endfor %}</tbody>
+</table></div>
+{% endblock %}

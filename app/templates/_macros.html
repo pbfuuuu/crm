@@ -1,0 +1,37 @@
+{% macro csrf() %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endmacro %}
+
+{% macro field(name, label, value='', errors={}, type='text', required=False, attrs='', hint='') %}
+<div class="field{% if errors.get(name) %} has-error{% endif %}">
+  <label for="{{ name }}">{{ label }}{% if required %} <span class="req">*</span>{% endif %}</label>
+  <input id="{{ name }}" name="{{ name }}" type="{{ type }}" value="{{ '' if value is none else value }}" {{ attrs|safe }}>
+  {% if hint %}<div class="hint">{{ hint }}</div>{% endif %}
+  {% if errors.get(name) %}<div class="err">{{ errors[name] }}</div>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro textarea(name, label, value='', errors={}) %}
+<div class="field{% if errors.get(name) %} has-error{% endif %}">
+  <label for="{{ name }}">{{ label }}</label>
+  <textarea id="{{ name }}" name="{{ name }}" rows="3">{{ '' if value is none else value }}</textarea>
+  {% if errors.get(name) %}<div class="err">{{ errors[name] }}</div>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro state_badge(state) %}
+{% if state == 'active' %}<span class="badge b-ok">Действует</span>
+{% elif state == 'expired' %}<span class="badge b-warn">Срок истёк</span>
+{% else %}<span class="badge b-grey">Закрыт</span>{% endif %}
+{% endmacro %}
+
+{% macro pay_badge(status) %}
+{% if status == 'paid' %}<span class="badge b-ok">Оплачено</span>
+{% elif status == 'partial' %}<span class="badge b-warn">Частично</span>
+{% elif status == 'unpaid' %}<span class="badge b-bad">Не оплачено</span>
+{% else %}<span class="badge b-grey">Не наступил</span>{% endif %}
+{% endmacro %}
+
+{% macro premises_badge(status) %}
+{% if status == 'free' %}<span class="badge b-info">Свободно</span>
+{% elif status == 'rented' %}<span class="badge b-ok">Занято</span>
+{% else %}<span class="badge b-warn">На ремонте</span>{% endif %}
+{% endmacro %}

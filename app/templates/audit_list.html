@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Журнал действий{% endblock %}
+{% block content %}
+<h1>Журнал действий</h1>
+<p class="muted">Показаны последние 300 записей.</p>
+<form method="get" class="toolbar">
+  <input type="text" name="user" value="{{ username }}" placeholder="Логин пользователя">
+  <select name="action"><option value="">Все действия</option>
+    {% for k, v in actions.items() %}<option value="{{ k }}" {{ 'selected' if action == k }}>{{ v }}</option>{% endfor %}</select>
+  <button class="btn secondary" type="submit">Применить</button>
+  {% if username or action %}<a href="{{ url_for('journal.index') }}">Сбросить</a>{% endif %}
+</form>
+<div class="tablewrap"><table>
+  <thead><tr><th>Время</th><th>Пользователь</th><th>Действие</th><th>Объект</th><th>Подробности</th><th>IP</th></tr></thead>
+  <tbody>{% for r in rows %}
+    <tr><td class="nowrap">{{ r.created_at }}</td><td>{{ r.username or '—' }}</td>
+      <td>{{ actions.get(r.action, r.action) }}</td>
+      <td>{{ objects.get(r.object_type, r.object_type or '') }}{% if r.object_id %} #{{ r.object_id }}{% endif %}</td>
+      <td>{{ r.details or '' }}</td><td class="muted">{{ r.ip or '' }}</td></tr>
+  {% else %}<tr><td colspan="6" class="empty">Записей нет</td></tr>{% endfor %}</tbody>
+</table></div>
+{% endblock %}
